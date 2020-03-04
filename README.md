@@ -1,6 +1,6 @@
 # vue-stage
 
-A Vue plugin which aims to make complex route-to-route transitions much less complex to manage. It leverages Vue's excellent [transition](https://vuejs.org/v2/guide/transitions.html) system and [router](https://router.vuejs.org/). It Uses Promises to determine animation lifecycle throughout the component tree. 
+A Vue plugin which aims to make complex route-to-route transitions much less complex to manage. It leverages Vue's excellent [transition](https://vuejs.org/v2/guide/transitions.html) system and [router](https://router.vuejs.org/). It Uses Promises to determine animation lifecycle throughout the component tree.
 
 This simple [demo](https://thinkingboxmedia.github.io/vue-stage/) app showcases different components animating together.
 
@@ -12,13 +12,13 @@ This simple [demo](https://thinkingboxmedia.github.io/vue-stage/) app showcases 
 $ npm install vue-stage --save
 or
 $ yarn add vue-stage
-``` 
+```
 
 ---
 
 ## Setup
 
-`vue-stage` contains two pieces: The plugin and the top-level `<Stage />` component. 
+`vue-stage` contains two pieces: The plugin and the top-level `<Stage />` component.
 
 ### Plugin
 ```javascript
@@ -48,7 +48,18 @@ export default {
 </script>
 ```
 
-It accepts four function props to help relay lifecycle upward to the main `App.vue`:  
+The Stage component can accept a `viewProps` prop, an object which allows you to pass data or methods down to the child views of the Stage:
+
+```
+...
+<Stage :viewProps="{
+  someValue,
+  someMethod: () => {console.log('App.vue method called from child view!')}
+}" />
+...
+```
+
+The component also accepts four function props to help relay lifecycle upward to the main `App.vue`:
 `beforeEnter`, `afterEnter`, `beforeLeave`, `afterLeave`
 
 ```
@@ -64,7 +75,7 @@ methods: {
 ...
 ```
 
-These methods are useful when the App needs to perform tasks when views change, like updating the scroll position. 
+These methods are useful when the App needs to perform tasks when views change, like updating the scroll position.
 
 The `Stage` component is a simple wrapper around the default `<router-view>`. It acts as the top-level stage lifecycle manager using Vue's [transition JS Hooks](https://vuejs.org/v2/guide/transitions.html#JavaScript-Hooks) and [`<keep-alive>`](https://vuejs.org/v2/api/#keep-alive). This can be easily refactored into your own template if required, see the section below on [extending](#extending).
 
@@ -81,7 +92,7 @@ Once applied, each Vue instance in your app has these data props applied to it:
 - `isOnStage`: _currently visible_
 - `isActiveOnStage`: _currently visible, but is not animating out (useful with `v-if`/`v-show`)_
 
-These are updated internally, and can be used to conditionally render template markup or determine the current animation state. 
+These are updated internally, and can be used to conditionally render template markup or determine the current animation state.
 
 ### Methods
 
@@ -91,12 +102,12 @@ Named methods are automatically called on instances _where they are defined_. Th
 - `stageEnter`
 - `stageLeave`: _Particularly important, the parent view will wait for this to resolve before unmounting._
 
-These are the primary animation methods. 
-**They must return a `Promise` if the parent view should wait for their animation to complete** before proceeding. Elements can be directly animated here with GSAP or other libraries (see [JS animation example](#examples)), or the returned `Promise`'s `resolve()` can be stored for firing later (e.g. if using CSS `transition` or `animation`, see [CSS animation example](#examples)). 
+These are the primary animation methods.
+**They must return a `Promise` if the parent view should wait for their animation to complete** before proceeding. Elements can be directly animated here with GSAP or other libraries (see [JS animation example](#examples)), or the returned `Promise`'s `resolve()` can be stored for firing later (e.g. if using CSS `transition` or `animation`, see [CSS animation example](#examples)).
 
 #### Duration
 
-`stageEnter` and `stageLeave` can alternatively be defined as data props; with a duration in milliseconds as their value. This replaces the method, automatically returning a promise which resolves after the specified duration. 
+`stageEnter` and `stageLeave` can alternatively be defined as data props; with a duration in milliseconds as their value. This replaces the method, automatically returning a promise which resolves after the specified duration.
 
 ```javascript
 data() {
@@ -116,15 +127,15 @@ methods: {
 - `stageBeforeLeave`: before animating out
 - `stageAfterLeave`: after outbound animation is complete
 
-Useful if the component needs to perform additional work before or after animating. 
+Useful if the component needs to perform additional work before or after animating.
 
 ---
 
 ## Examples
 
-The simple [demo](https://thinkingboxmedia.github.io/vue-stage/) app showcases both JS and CSS animations, and illustrates how a highly nested component can affect view-level lifecycle. 
+The simple [demo](https://thinkingboxmedia.github.io/vue-stage/) app showcases both JS and CSS animations, and illustrates how a highly nested component can affect view-level lifecycle.
 
-### JS 
+### JS
 
 ```html
 <template>
@@ -204,10 +215,10 @@ By default components are manually destroyed after they've finished leaving the 
 
 The plugin provides console warning messaging for certain situations:
 
-- If your Promise has not resolved after a certain timeout (10s by default):  
+- If your Promise has not resolved after a certain timeout (10s by default):
 This timeout can be adjusted if you're using long-running animations, but it can't be turned off entirely. To change this timeout, apply it when installing the plugin: `Vue.use(VueStage, { promiseTimeout: 15000 })`
 
-- If you've defined a `stageEnter` or `stageLeave` method, but have not returned a promise from it:  
+- If you've defined a `stageEnter` or `stageLeave` method, but have not returned a promise from it:
 Components _don't always need_ to return a promise (e.g. in cases where the named method is only used for lifecycle/convenience purposes). This warning is to remind you that the parent view won't wait for the component to finish animating. This can be snoozed locally for an individual component by setting the data prop `stageWarningsSnoozed` to `true`, or globally for all components when installing the plugin: `Vue.use(VueStage, { promiseWarnings: false })`.
 
 _Tip: Specify a `name` option on your components. Error messages list the name option, pointing you directly to the component that's throwing it:_
@@ -248,8 +259,8 @@ export default {
 ```
 
 - The `<Stage />` relies on Vue's transition system to relay view-level `enter` and `leave` lifecycle events through to the top level `<router-view />` components (main page views). It does so using [transition JS Hooks](https://vuejs.org/v2/guide/transitions.html#JavaScript-Hooks), only calling `done()` once all children have resolved their promises.
-- These methods traverse the entire component tree for each top-level view, calling the appropriate lifecycle method on descendants, which then propagate upward their own animation promises. Once all promises for the view's tree are resolved, it completes the animation at the view level. 
-- The `out-in` transition mode is important here, as we need the incoming view to wait for the outgoing view's entire tree to finish animating before performing the view-level mounting operation. 
+- These methods traverse the entire component tree for each top-level view, calling the appropriate lifecycle method on descendants, which then propagate upward their own animation promises. Once all promises for the view's tree are resolved, it completes the animation at the view level.
+- The `out-in` transition mode is important here, as we need the incoming view to wait for the outgoing view's entire tree to finish animating before performing the view-level mounting operation.
 - `<keep-alive>` is critical here working with CSS transitions. By default Vue immediately destroys outward transitioning elements, they're ephemeral - only visually changing, and so they are immediately removed from the virtual DOM. This makes toggling a transition with `v-if` or `v-show` impossible, as the component has already been scrapped in memory. Components are kept alive and then manually destroyed once they've finished leaving the stage.
 
 ## TODOs

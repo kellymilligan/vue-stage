@@ -6,7 +6,11 @@
     v-on:leave="leave"
   >
     <keep-alive>
-      <router-view ref="view" />
+      <router-view
+        ref="view"
+        :key="$route.path"
+        v-bind="viewProps"
+      />
     </keep-alive>
   </transition>
 </template>
@@ -29,6 +33,10 @@ export default {
     afterLeave: {
       type: Function,
       default: () => {}
+    },
+    viewProps: {
+      type: Object,
+      default: () => ({})
     }
   },
   methods: {
